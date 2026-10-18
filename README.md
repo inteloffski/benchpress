@@ -1,59 +1,81 @@
+<p align="center">
+  <b>English</b> · <a href="README.ru.md">Русский</a> · <a href="README.zh-CN.md">简体中文</a>
+</p>
+
 # mobench
 
-Кроссплатформенный CLI-бенчмарк компьютера для мобильной разработки (Android / iOS / Flutter).
-Один бинарник без зависимостей: не нужен ни Xcode, ни Android SDK, ни Flutter. Работает на
-macOS, Linux и Windows, x86_64 и ARM64.
+A cross-platform CLI benchmark that rates a computer for mobile development (Android / iOS / Flutter).
+It is a single binary with no dependencies, and you don't need Xcode, the Android SDK or Flutter to run it.
+It runs on macOS, Linux and Windows, on x86_64 and ARM64.
 
-Вместо «попугаев» вроде умножения матриц каждый тест моделирует конкретный этап мобильной сборки.
-Каждый тест считает контрольную сумму, и она должна совпадать на всех платформах: так видно, что
-все машины выполнили одну и ту же работу.
+Synthetic number crunching like matrix multiplication says little about build speed, so each test
+models a specific stage of a mobile build instead. Every test computes a checksum that must be identical
+on all platforms. That shows each machine did exactly the same work.
 
-| тест | что моделирует | потоки |
+| test | what it models | threads |
 |---|---|---|
-| `compile_st` | фронтенд компилятора (lexer → parser → const-fold → type-check → bytecode) на сгенерированном Kotlin-подобном коде: инкрементальная сборка одного модуля | 1 |
-| `compile_mt` | то же на 2400 файлах параллельно: clean build (Gradle workers, swift-driver) | все |
-| `link_st` | линковка: глобальная таблица ~800k символов, сортировка, раскладка адресов, ~1.9M релокаций (ld64, lld, R8) | 1 |
-| `alloc_mt` | managed runtime: множество короткоживущих объектов, графы указателей, хэш-мапы со строковыми ключами (Gradle/Kotlin daemon, Dart VM) | все |
-| `compress_mt` | упаковка APK/AAB/IPA: LZ77 с hash chains (ядро deflate) + проверочная распаковка | все |
-| `hash_mt` | ключи build cache, codesign: SHA-256 | все |
-| `fs_small` | build intermediates: создание, rename, сканирование, чтение и удаление ~7.7k мелких файлов | ≤4 |
-| `disk_seq` | последовательная запись 1 GiB + fsync | 1 |
-| `mem_bw` | пропускная способность памяти (STREAM triad) | все |
-| `mem_lat` | латентность памяти (pointer chasing по 128 MiB) | 1 |
+| `compile_st` | compiler frontend (lexer → parser → const-fold → type-check → bytecode) on generated Kotlin-like code; incremental build of one module | 1 |
+| `compile_mt` | the same on 2400 files in parallel; clean build (Gradle workers, swift-driver) | all |
+| `link_st` | linking: global table of ~800k symbols, sorting, address layout, ~1.9M relocations (ld64, lld, R8) | 1 |
+| `alloc_mt` | managed runtime: many short-lived objects, pointer graphs, string-keyed hash maps (Gradle/Kotlin daemon, Dart VM) | all |
+| `compress_mt` | APK/AAB/IPA packaging: LZ77 with hash chains (the core of deflate) plus verifying decompression | all |
+| `hash_mt` | build cache keys, code signing: SHA-256 | all |
+| `fs_small` | build intermediates: creating, renaming, scanning, reading and deleting ~7.7k small files | ≤4 |
+| `disk_seq` | sequential 1 GiB write + fsync | 1 |
+| `mem_bw` | memory bandwidth (STREAM triad) | all |
+| `mem_lat` | memory latency (pointer chasing over 128 MiB) | 1 |
 
-## Очки
+## Scoring
 
-- Очки теста = `1000 × эталонное_время / медиана_времени`. **1000 — эталон (Apple M4 Pro, 14 ядер)**;
-  2000 — в два раза быстрее.
-- **Категории** (Single-core, Multi-core, Memory, Storage) и **платформы** (Android, iOS, Flutter)
-  считаются как взвешенное геометрическое среднее тестов. Веса заданы в `PROFILES` и `CATEGORIES`
-  в `src/main.rs`. Например, для Android больше весят параллельная компиляция и managed runtime
-  (Gradle), для iOS — однопоточная компиляция и линковщик.
-- **MOBILE DEV SCORE** — геометрическое среднее трёх платформ.
+- Test score = `1000 × reference_time / median_time`. **1000 is the reference machine (Apple M4 Pro, 14 cores)**;
+  2000 means twice as fast.
+- **Categories** (Single-core, Multi-core, Memory, Storage) and **platforms** (Android, iOS, Flutter)
+  are weighted geometric means of the test scores. The weights live in `PROFILES` and `CATEGORIES` in
+  `src/main.rs`. For example, Android leans on parallel compilation and the managed runtime (Gradle),
+  while iOS leans on single-threaded compilation and the linker.
+- **MOBILE DEV SCORE** is the geometric mean of the three platform scores.
 
-## Запуск
+At the end of a run, mobench prints a summary card with the hardware, the OS version and the scores:
+
+```
+  ╭──────────────────────────────────────────────────────────────────╮
+  │  MOBILE DEV SCORE                                           994  │
+  │                                                                  │
+  │  Device   MacBook Pro (Mac16,7)                                  │
+  │  CPU      Apple M4 Pro                                           │
+  │  Cores    10P + 4E cores, 14 threads                             │
+  │  RAM      24 GB                                                  │
+  │  OS       macOS 26.6.2 (build 25G83) · aarch64                   │
+  │                                                                  │
+  │  Android 997   iOS 993   Flutter 994                             │
+  │  Single-core 977   Multi-core 996   Memory 983   Storage 1022    │
+  ╰──────────────────────────────────────────────────────────────────╯
+```
+
+## Usage
 
 ```sh
+git clone https://github.com/inteloffski/benchpress && cd benchpress
 cargo build --release
-./target/release/mobench                 # полный прогон: прогрев + 3 замера, ~40 с на M4 Pro
-./target/release/mobench --quick        # 1 замер без прогрева
-./target/release/mobench --dir D:\work  # дисковые тесты на нужном диске
+./target/release/mobench                 # full run: warm-up + 3 runs, ~40 s on an M4 Pro
+./target/release/mobench --quick        # 1 run, no warm-up
+./target/release/mobench --dir D:\work  # run the disk tests on a specific drive
 ./target/release/mobench --json result.json
 ./target/release/mobench --list
 ```
 
-Бинарники под все ОС и архитектуры собирает `.github/workflows/release.yml` (на push тега `v*`).
+`.github/workflows/release.yml` builds binaries for every OS and architecture when you push a `v*` tag.
 
-## Как получить честные результаты
+## Getting fair results
 
-- Ноутбук должен быть на зарядке (бенчмарк предупредит, если он на батарее).
-- Закройте IDE, эмуляторы, браузер.
-- Для оценки троттлинга запустите `--runs 10` и посмотрите на разброс (колонка `±`).
-- На Windows `fs_small` сильно зависит от Defender. Это реальный фактор скорости сборки,
-  поэтому сравните результат с папкой, добавленной в исключения.
+- Keep laptops on the charger. mobench warns you when it detects battery power.
+- Close the IDE, emulators and browser.
+- To check for thermal throttling, run `--runs 10` and look at the spread (the `±` column).
+- On Windows, `fs_small` depends heavily on Defender. That is a real factor in build speed, so compare
+  against a run in a folder excluded from scanning.
 
-## Пересчёт эталона
+## Recalibrating the reference
 
-Если меняется объём работы любого теста, эталон пересчитывается: `mobench --calibrate --runs 5`
-на эталонной машине, затем полученные `ref_secs` и `expect` вписываются в `TESTS` в `src/main.rs`.
-После этого старые результаты несравнимы с новыми, поэтому поднимите версию.
+If you change the amount of work in any test, recalibrate the reference: run `mobench --calibrate --runs 5`
+on the reference machine, then copy the resulting `ref_secs` and `expect` values into `TESTS` in `src/main.rs`.
+Old results are no longer comparable after that, so bump the version.
