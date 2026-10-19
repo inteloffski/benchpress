@@ -1,5 +1,9 @@
 name: build
 
+# On pull requests and manual runs: build and test on every platform.
+# On a v* tag: additionally publish a GitHub Release with ready-to-run archives.
+# Asset names carry no version, so .../releases/latest/download/<asset> always points to the newest one.
+
 on:
   push:
     tags: ['v*']
@@ -12,23 +16,65 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { os: ubuntu-latest,    target: x86_64-unknown-linux-musl }
-          - { os: ubuntu-24.04-arm, target: aarch64-unknown-linux-musl }
-          - { os: windows-latest,   target: x86_64-pc-windows-msvc }
-          - { os: windows-11-arm,   target: aarch64-pc-windows-msvc }
-          - { os: macos-latest,     target: aarch64-apple-darwin }
-          - { os: macos-latest,     target: x86_64-apple-darwin }
+          - { os: ubuntu-latest,    target: x86_64-unknown-linux-musl,  name: linux-x86_64 }
+          - { os: ubuntu-24.04-arm, target: aarch64-unknown-linux-musl, name: linux-arm64 }
+          - { os: windows-latest,   target: x86_64-pc-windows-msvc,     name: windows-x86_64 }
+          - { os: windows-11-arm,   target: aarch64-pc-windows-msvc,    name: windows-arm64 }
+          - { os: macos-latest,     target: aarch64-apple-darwin,       name: macos-arm64 }
+          - { os: macos-latest,     target: x86_64-apple-darwin,        name: macos-x86_64 }
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-      - run: rustup target add ${{ matrix.target }}
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
       - if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y musl-tools
       - run: cargo test --release
       - run: cargo build --release --target ${{ matrix.target }}
+
+      - name: Package (Unix)
+        if: runner.os != 'Windows'
+        run: |
+          mkdir -p dist
+          tar -czf dist/mobench-${{ matrix.name }}.tar.gz -C target/${{ matrix.target }}/release mobench
+      - name: Package (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force dist | Out-Null
+          Compress-Archive -Path target/${{ matrix.target }}/release/mobench.exe -DestinationPath dist/mobench-${{ matrix.name }}.zip
+
       - uses: actions/upload-artifact@v4
         with:
-          name: mobench-${{ matrix.target }}
-          path: |
-            target/${{ matrix.target }}/release/mobench
-            target/${{ matrix.target }}/release/mobench.exe
+          name: mobench-${{ matrix.name }}
+          path: dist/*
+          if-no-files-found: error
+
+  release:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check tag matches Cargo.toml version
+        run: |
+          crate=$(grep -m1 '^version' Cargo.toml | cut -d'"' -f2)
+          if [ "${GITHUB_REF_NAME#v}" != "$crate" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME does not match Cargo.toml version $crate"
+            exit 1
+          fi
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: mobench-*
+          path: dist
+          merge-multiple: true
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cd dist
+          sha256sum * > SHA256SUMS
+          gh release create "$GITHUB_REF_NAME" * --repo "$GITHUB_REPOSITORY" --title "mobench $GITHUB_REF_NAME" --generate-notes

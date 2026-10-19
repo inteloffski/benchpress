@@ -50,6 +50,33 @@
   ╰──────────────────────────────────────────────────────────────────╯
 ```
 
+## 下载
+
+| 操作系统 | 文件 |
+|---|---|
+| macOS，Apple Silicon | [`mobench-macos-arm64.tar.gz`](https://github.com/inteloffski/benchpress/releases/latest/download/mobench-macos-arm64.tar.gz) |
+| macOS，Intel | [`mobench-macos-x86_64.tar.gz`](https://github.com/inteloffski/benchpress/releases/latest/download/mobench-macos-x86_64.tar.gz) |
+| Windows x64 | [`mobench-windows-x86_64.zip`](https://github.com/inteloffski/benchpress/releases/latest/download/mobench-windows-x86_64.zip) |
+| Windows ARM | [`mobench-windows-arm64.zip`](https://github.com/inteloffski/benchpress/releases/latest/download/mobench-windows-arm64.zip) |
+| Linux x64 | [`mobench-linux-x86_64.tar.gz`](https://github.com/inteloffski/benchpress/releases/latest/download/mobench-linux-x86_64.tar.gz) |
+| Linux ARM64 | [`mobench-linux-arm64.tar.gz`](https://github.com/inteloffski/benchpress/releases/latest/download/mobench-linux-arm64.tar.gz) |
+
+```sh
+# macOS / Linux: 将 macos-arm64 替换为表格中你的平台
+curl -L https://github.com/inteloffski/benchpress/releases/latest/download/mobench-macos-arm64.tar.gz | tar xz
+./mobench
+```
+
+```powershell
+# Windows (PowerShell)
+Invoke-WebRequest https://github.com/inteloffski/benchpress/releases/latest/download/mobench-windows-x86_64.zip -OutFile mobench.zip
+Expand-Archive mobench.zip -DestinationPath .
+.\mobench.exe
+```
+
+可执行文件未经签名。如果通过浏览器下载，macOS 可能会阻止运行，可执行 `xattr -d com.apple.quarantine mobench`
+解除限制；通过 `curl` 下载则不受影响。Windows SmartScreen 可能会显示警告：点击“更多信息”→“仍要运行”。
+
 ## 使用方法
 
 ```sh
