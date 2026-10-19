@@ -76,7 +76,7 @@ curl -L https://github.com/inteloffski/benchpress/releases/latest/download/moben
 ```powershell
 # Windows (PowerShell)
 Invoke-WebRequest https://github.com/inteloffski/benchpress/releases/latest/download/mobench-windows-x86_64.zip -OutFile mobench.zip
-Expand-Archive mobench.zip -DestinationPath .
+Expand-Archive mobench.zip -DestinationPath . -Force
 .\mobench.exe
 ```
 
