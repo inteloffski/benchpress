@@ -1,0 +1,24 @@
+{
+  "version": "0.1.0",
+  "score_version": 1,
+  "timestamp": "2026-10-19T16:52:43Z",
+  "runs": 3,
+  "warmup": true,
+  "system": {"os": "macOS 26.6.2 (build 25G83)", "arch": "aarch64", "model": "MacBook Pro (Mac16,7)", "cpu": "Apple M4 Pro", "cores": "10P + 4E", "threads": 14, "threads_used": 14, "ram_gb": 24.0, "on_battery": false},
+  "tests": [
+    {"id": "compile_st", "median_s": 1.1150, "times_s": [1.1091, 1.1150, 1.1220], "score": 1046.5, "valid": true},
+    {"id": "compile_mt", "median_s": 1.1291, "times_s": [1.1813, 1.1226, 1.1291], "score": 1000.2, "valid": true},
+    {"id": "link_st", "median_s": 1.1482, "times_s": [1.1437, 1.1584, 1.1482], "score": 977.6, "valid": true},
+    {"id": "alloc_mt", "median_s": 0.9928, "times_s": [1.0321, 0.9873, 0.9928], "score": 983.1, "valid": true},
+    {"id": "compress_mt", "median_s": 0.9371, "times_s": [0.9348, 0.9411, 0.9371], "score": 1006.3, "valid": true},
+    {"id": "hash_mt", "median_s": 1.1354, "times_s": [1.1354, 1.1062, 1.1531], "score": 960.5, "valid": true},
+    {"id": "fs_small", "median_s": 0.7788, "times_s": [0.9405, 0.7757, 0.7788], "score": 1026.1, "valid": true},
+    {"id": "disk_seq", "median_s": 0.3403, "times_s": [0.3415, 0.3294, 0.3403], "score": 997.7, "valid": true},
+    {"id": "mem_bw", "median_s": 0.8079, "times_s": [0.8079, 0.8124, 0.8065], "score": 998.6, "valid": true},
+    {"id": "mem_lat", "median_s": 1.3279, "times_s": [1.3350, 1.3159, 1.3279], "score": 983.2, "valid": true}
+  ],
+  "categories": {"Single-core": 1005.7, "Multi-core": 987.4, "Memory": 990.9, "Storage": 1011.8},
+  "platforms": {"Android": 1003.3, "iOS": 1001.3, "Flutter": 1006.7},
+  "total": 1003.8,
+  "partial": false
+}
