@@ -84,6 +84,7 @@ struct Opts {
     save: bool,
     compare: compare::Key,
     leaderboard: bool,
+    device: Option<String>,
 }
 
 struct Outcome {
@@ -111,6 +112,7 @@ USAGE: mobench [options]
       --save         save the result to results/v<N>/<cpu>/ to share it via a pull request
       --compare K    rank by: total (default), android, ios, flutter
       --leaderboard  show the ranking of submitted results without running anything
+      --device NAME  override the detected device name (e.g. \"Custom PC\", \"GitHub Actions runner\")
       --list         list tests and exit
   -h, --help         this help
 
@@ -132,6 +134,7 @@ fn parse_args() -> Opts {
         save: false,
         compare: compare::Key::Total,
         leaderboard: false,
+        device: None,
     };
     let args: Vec<String> = std::env::args().skip(1).collect();
     let mut i = 0;
@@ -164,6 +167,7 @@ fn parse_args() -> Opts {
             "--calibrate" => o.calibrate = true,
             "--save" => o.save = true,
             "--leaderboard" => o.leaderboard = true,
+            "--device" => o.device = Some(value(&mut i)),
             "--compare" => {
                 let v = value(&mut i);
                 o.compare = compare::Key::parse(&v).unwrap_or_else(|| {
@@ -285,7 +289,10 @@ fn main() {
         }
         return;
     }
-    let info = sysinfo::collect();
+    let mut info = sysinfo::collect();
+    if let Some(d) = &opts.device {
+        info.model = Some(d.clone());
+    }
     let ctx = Ctx { dir: opts.dir.clone() };
 
     println!("mobench {VERSION} — mobile development benchmark");

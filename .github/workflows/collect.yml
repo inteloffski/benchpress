@@ -1,0 +1,66 @@
+name: collect runner results
+
+# Runs the full benchmark on every GitHub-hosted runner type and opens a pull request
+# with the new results/ files. Start it manually: Actions → collect runner results → Run workflow.
+# Runners are shared virtual machines, so results are labelled as such via --device.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  bench:
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-latest, ubuntu-24.04-arm, windows-latest, windows-11-arm, macos-latest]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo build --release
+      - name: Run benchmark
+        shell: bash
+        run: ./target/release/mobench --save --device "GitHub Actions runner (${{ matrix.runner }})"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: results-${{ matrix.runner }}
+          path: results/
+          if-no-files-found: error
+
+  pull-request:
+    needs: bench
+    # open a PR with whatever succeeded, even if some runners failed
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: results-*
+          path: results
+          merge-multiple: true
+      - name: Open pull request
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BRANCH: ci-results/${{ github.run_id }}
+        run: |
+          if [ -z "$(git status --porcelain results)" ]; then
+            echo "No new results."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$BRANCH"
+          git add results
+          git commit -m "Add GitHub Actions runner results (run ${{ github.run_id }})"
+          git push origin "$BRANCH"
+          files=$(git diff --name-only HEAD~1 | sed 's/^/- `/; s/$/`/')
+          body=$(printf 'Benchmark results from GitHub-hosted runners ([workflow run](%s)).\n\nRunners are shared VMs: treat these as reference points, not laptop performance.\n\n%s\n' \
+            "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" "$files")
+          gh pr create --head "$BRANCH" --title "Add GitHub Actions runner results" --body "$body" \
+            || echo "::warning::Could not open the pull request automatically. Enable 'Allow GitHub Actions to create and approve pull requests' in Settings → Actions → General, or open it manually: ${{ github.server_url }}/${{ github.repository }}/pull/new/$BRANCH"
