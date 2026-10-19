@@ -54,12 +54,15 @@
 
 | 操作系统 | 文件 |
 |---|---|
-| macOS，Apple Silicon | [`mobench-macos-arm64.tar.gz`](https://github.com/inteloffski/benchpress/releases/latest/download/mobench-macos-arm64.tar.gz) |
+| macOS，Apple Silicon（M1 及更新） | [`mobench-macos-arm64.tar.gz`](https://github.com/inteloffski/benchpress/releases/latest/download/mobench-macos-arm64.tar.gz) |
 | macOS，Intel | [`mobench-macos-x86_64.tar.gz`](https://github.com/inteloffski/benchpress/releases/latest/download/mobench-macos-x86_64.tar.gz) |
-| Windows x64 | [`mobench-windows-x86_64.zip`](https://github.com/inteloffski/benchpress/releases/latest/download/mobench-windows-x86_64.zip) |
-| Windows ARM | [`mobench-windows-arm64.zip`](https://github.com/inteloffski/benchpress/releases/latest/download/mobench-windows-arm64.zip) |
+| **Windows x64 — 大多数电脑** | [`mobench-windows-x86_64.zip`](https://github.com/inteloffski/benchpress/releases/latest/download/mobench-windows-x86_64.zip) |
+| Windows ARM — 仅限骁龙（Snapdragon）笔记本 | [`mobench-windows-arm64.zip`](https://github.com/inteloffski/benchpress/releases/latest/download/mobench-windows-arm64.zip) |
 | Linux x64 | [`mobench-linux-x86_64.tar.gz`](https://github.com/inteloffski/benchpress/releases/latest/download/mobench-linux-x86_64.tar.gz) |
 | Linux ARM64 | [`mobench-linux-arm64.tar.gz`](https://github.com/inteloffski/benchpress/releases/latest/download/mobench-linux-arm64.tar.gz) |
+
+不确定 Windows 该下载哪个文件？打开“设置 → 系统 → 系统信息”，查看“系统类型”：
+“基于 x64 的处理器”请下载 x64，“基于 ARM 的处理器”请下载 ARM。版本不匹配时会提示“此应用无法在你的电脑上运行”。
 
 ```sh
 # macOS / Linux: 将 macos-arm64 替换为表格中你的平台

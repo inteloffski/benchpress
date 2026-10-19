@@ -281,7 +281,48 @@ fn json_str(s: &str) -> String {
     o
 }
 
+/// True when Windows created a console just for us, i.e. the user double-clicked mobench.exe
+/// in Explorer: the window would close the moment we exit, before the results can be read.
+#[cfg(windows)]
+fn launched_by_double_click() -> bool {
+    #[link(name = "kernel32")]
+    extern "system" {
+        fn GetConsoleProcessList(list: *mut u32, count: u32) -> u32;
+    }
+    let mut pids = [0u32; 4];
+    // from cmd/PowerShell the shell is attached to the console too, so the count is >= 2
+    unsafe { GetConsoleProcessList(pids.as_mut_ptr(), pids.len() as u32) == 1 }
+}
+
+#[cfg(not(windows))]
+fn launched_by_double_click() -> bool {
+    false
+}
+
+fn wait_for_enter() {
+    use std::io::Write;
+    print!("\n  Press Enter to exit...");
+    let _ = std::io::stdout().flush();
+    let _ = std::io::stdin().read_line(&mut String::new());
+}
+
 fn main() {
+    let keep_open = launched_by_double_click();
+    if keep_open {
+        // panic = "abort" skips destructors, so keep the window open from the panic hook
+        let default_hook = std::panic::take_hook();
+        std::panic::set_hook(Box::new(move |info| {
+            default_hook(info);
+            wait_for_enter();
+        }));
+    }
+    run();
+    if keep_open {
+        wait_for_enter();
+    }
+}
+
+fn run() {
     let opts = parse_args();
     if opts.leaderboard {
         if !compare::print(SCORE_VERSION, opts.compare, None) {

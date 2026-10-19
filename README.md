@@ -56,12 +56,16 @@ At the end of a run, mobench prints a summary card with the hardware, the OS ver
 
 | OS | file |
 |---|---|
-| macOS, Apple Silicon | [`mobench-macos-arm64.tar.gz`](https://github.com/inteloffski/benchpress/releases/latest/download/mobench-macos-arm64.tar.gz) |
+| macOS, Apple Silicon (M1 and newer) | [`mobench-macos-arm64.tar.gz`](https://github.com/inteloffski/benchpress/releases/latest/download/mobench-macos-arm64.tar.gz) |
 | macOS, Intel | [`mobench-macos-x86_64.tar.gz`](https://github.com/inteloffski/benchpress/releases/latest/download/mobench-macos-x86_64.tar.gz) |
-| Windows x64 | [`mobench-windows-x86_64.zip`](https://github.com/inteloffski/benchpress/releases/latest/download/mobench-windows-x86_64.zip) |
-| Windows ARM | [`mobench-windows-arm64.zip`](https://github.com/inteloffski/benchpress/releases/latest/download/mobench-windows-arm64.zip) |
+| **Windows x64 — most PCs** | [`mobench-windows-x86_64.zip`](https://github.com/inteloffski/benchpress/releases/latest/download/mobench-windows-x86_64.zip) |
+| Windows ARM — Snapdragon laptops only | [`mobench-windows-arm64.zip`](https://github.com/inteloffski/benchpress/releases/latest/download/mobench-windows-arm64.zip) |
 | Linux x64 | [`mobench-linux-x86_64.tar.gz`](https://github.com/inteloffski/benchpress/releases/latest/download/mobench-linux-x86_64.tar.gz) |
 | Linux ARM64 | [`mobench-linux-arm64.tar.gz`](https://github.com/inteloffski/benchpress/releases/latest/download/mobench-linux-arm64.tar.gz) |
+
+Not sure which Windows file you need? Open Settings → System → About and check "System type":
+"x64-based processor" means x64, "ARM-based processor" means ARM. The wrong one fails with
+"This app can't run on your PC".
 
 ```sh
 # macOS / Linux: replace macos-arm64 with your platform from the table

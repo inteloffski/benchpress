@@ -1,11 +1,12 @@
 name: build
 
-# On pull requests and manual runs: build and test on every platform.
+# On pushes to main, pull requests and manual runs: build and test on every platform.
 # On a v* tag: additionally publish a GitHub Release with ready-to-run archives.
 # Asset names carry no version, so .../releases/latest/download/<asset> always points to the newest one.
 
 on:
   push:
+    branches: [main]
     tags: ['v*']
   pull_request:
   workflow_dispatch:
