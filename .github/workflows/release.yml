@@ -56,6 +56,8 @@ jobs:
     needs: build
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
+    concurrency:
+      group: release-${{ github.ref }}
     permissions:
       contents: write
     steps:
@@ -78,4 +80,9 @@ jobs:
         run: |
           cd dist
           sha256sum * > SHA256SUMS
-          gh release create "$GITHUB_REF_NAME" * --repo "$GITHUB_REPOSITORY" --title "mobench $GITHUB_REF_NAME" --generate-notes
+          # idempotent: GitHub occasionally delivers the same tag push twice
+          if gh release view "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" * --repo "$GITHUB_REPOSITORY" --clobber
+          else
+            gh release create "$GITHUB_REF_NAME" * --repo "$GITHUB_REPOSITORY" --title "mobench $GITHUB_REF_NAME" --generate-notes
+          fi
