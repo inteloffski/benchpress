@@ -33,6 +33,14 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y musl-tools
       - run: cargo test --release
       - run: cargo build --release --target ${{ matrix.target }}
+      # run the exact binary that goes into the release (x86_64 macOS can't run on the ARM runner)
+      - name: Smoke-test the release binary
+        if: matrix.target != 'x86_64-apple-darwin'
+        shell: bash
+        run: |
+          bin=target/${{ matrix.target }}/release/mobench
+          "$bin" --version
+          "$bin" --only compile_st,fs_small --quick
 
       - name: Package (Unix)
         if: runner.os != 'Windows'
