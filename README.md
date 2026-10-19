@@ -66,6 +66,27 @@ cargo build --release
 
 `.github/workflows/release.yml` builds binaries for every OS and architecture when you push a `v*` tag.
 
+## Comparing with other machines
+
+After each run mobench shows where your machine ranks among results shared by other people
+(median per CPU, `n` = number of results). `--compare android|ios|flutter` ranks by platform,
+and `mobench --leaderboard` prints the ranking without running anything.
+
+### Sharing your result
+
+1. Fork this repository, clone your fork and build it.
+2. Plug in the charger and run `./target/release/mobench --save`. A full run is required,
+   so `--quick`, `--only`, `--skip` and `--threads` are not allowed.
+3. Commit the new file and open a pull request. mobench prints the exact commands.
+
+Every result is a **separate new file**: `results/v1/<cpu>/<UTC time>-<random id>.json`.
+Two people with the same hardware never touch the same file, so pull requests never conflict
+and both results are kept. Results with the same CPU are combined by median.
+CI checks every file in a pull request: invalid checksums, quick or partial runs, battery power,
+or a mismatched score version fail the check.
+`v1` is the scoring version. If tests or reference values change, new results go to `v2`
+and are never mixed with old ones.
+
 ## Getting fair results
 
 - Keep laptops on the charger. mobench warns you when it detects battery power.

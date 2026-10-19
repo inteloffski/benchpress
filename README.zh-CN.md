@@ -64,6 +64,25 @@ cargo build --release
 
 推送 `v*` 标签时，`.github/workflows/release.yml` 会为所有操作系统和架构构建可执行文件。
 
+## 与其他机器对比
+
+每次运行结束后，mobench 会显示你的机器在其他人分享的结果中的排名（按 CPU 型号取中位数，
+`n` 为结果数量）。`--compare android|ios|flutter` 按平台排序，`mobench --leaderboard`
+无需运行测试即可查看排行榜。
+
+### 分享你的结果
+
+1. Fork 本仓库，克隆你的 fork 并进行构建。
+2. 连接电源后运行 `./target/release/mobench --save`。必须是完整运行，
+   不允许使用 `--quick`、`--only`、`--skip` 和 `--threads`。
+3. 提交新生成的文件并发起 pull request。mobench 会输出具体的命令。
+
+每个结果都是一个**单独的新文件**：`results/v1/<cpu>/<UTC 时间>-<随机 id>.json`。
+硬件相同的两个人永远不会修改同一个文件，因此 pull request 之间不会产生冲突，两份结果都会保留。
+相同 CPU 的结果按中位数合并。CI 会检查 pull request 中的每个文件：校验和错误、快速运行或部分运行、
+使用电池供电或评分版本不匹配都会导致检查失败。
+`v1` 是评分版本。如果测试内容或基准值发生变化，新结果会放入 `v2`，不会与旧结果混在一起。
+
 ## 如何获得可靠的结果
 
 - 笔记本电脑请连接电源（如果检测到使用电池供电，mobench 会给出提示）。
